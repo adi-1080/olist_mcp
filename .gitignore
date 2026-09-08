@@ -1,0 +1,49 @@
+# Environment variables & Secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# Python Byte Code & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment (uv)
+.venv/
+venv/
+env/
+ENV/
+
+# Database & Generated Datasets
+data/olist.db
+data/*.csv
+data/*.zip
+*.db
+*.sqlite
+*.sqlite3
+
+# Pytest & Testing Cache
+.pytest_cache/
+.coverage
+htmlcov/
+.coverage.*
+
+# Build & Hatchling artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE & OS Junk
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

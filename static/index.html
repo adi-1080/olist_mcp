@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olist Sales Analytics & Chart Builder</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header Nav -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="brand-mark">OA</div>
+                <div>
+                    <h1>Olist Analytics Chatbot</h1>
+                    <p class="subtitle">E-Commerce Sales Analytics & Dashboard</p>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <!-- Agent Mode Toggle Switch -->
+                <div class="toggle-container">
+                    <span class="toggle-label">Agent Mode:</span>
+                    <div class="switch-wrapper">
+                        <input type="checkbox" id="modeToggle" onchange="handleModeToggle(event)">
+                        <label for="modeToggle" class="switch-slider">
+                            <span class="switch-text llm">LLM</span>
+                            <span class="switch-text fallback">Fallback</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <nav class="tab-nav">
+                    <button class="tab-btn active" id="tabChatBtn" onclick="switchTab('chat')">
+                        Query Builder
+                    </button>
+                    <button class="tab-btn" id="tabDashboardBtn" onclick="switchTab('dashboard')">
+                        Dashboard (<span id="pinCount">0</span>)
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- TAB 1: Chat & Query Builder -->
+            <section id="chatSection" class="tab-section active">
+                <!-- Sample Query Chips -->
+                <div class="sample-queries-card">
+                    <h3>Sample Queries</h3>
+                    <div class="chips-grid">
+                        <button class="chip" onclick="submitSampleQuery('Show monthly revenue trend for 2017')">Monthly Revenue 2017</button>
+                        <button class="chip" onclick="submitSampleQuery('Which product categories generate the most revenue?')">Top Revenue Categories</button>
+                        <button class="chip" onclick="submitSampleQuery('Which states have the worst delivery performance?')">Worst Delivery States</button>
+                        <button class="chip" onclick="submitSampleQuery('What share of payments are credit card vs boleto?')">Payment Type Share</button>
+                        <button class="chip" onclick="submitSampleQuery('Top 10 sellers by revenue in São Paulo')">Top Sellers in SP</button>
+                        <button class="chip" onclick="submitSampleQuery('Show review score distribution for electronics')">Electronics Reviews</button>
+                        <button class="chip" onclick="submitSampleQuery('Compare review scores across the top 5 categories by order volume')">Top 5 Categories Reviews</button>
+                        <button class="chip" onclick="submitSampleQuery('Show monthly orders and average review score together for 2017')">Orders vs Rating Dual-Axis</button>
+                        <button class="chip" onclick="submitSampleQuery('Do sellers with faster delivery get better reviews?')">Delivery vs Review Scatter</button>
+                        <button class="chip guardrail" onclick="submitSampleQuery('What is the current stock price of Apple?')">Guardrail: Out of Bounds</button>
+                    </div>
+                </div>
+
+                <!-- Input Box -->
+                <div class="input-card">
+                    <form id="queryForm" onsubmit="handleQuerySubmit(event)">
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                id="queryInput" 
+                                placeholder="Type a natural language question (e.g., 'Show monthly revenue trend for 2017')..." 
+                                required
+                            />
+                            <button type="submit" id="submitBtn">
+                                Execute Query
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Result Container -->
+                <div id="resultContainer" class="result-container hidden">
+                    <!-- Loading Indicator -->
+                    <div id="loadingIndicator" class="loading-box hidden">
+                        <div class="spinner"></div>
+                        <p>Processing query, executing SQL joins, and selecting chart type...</p>
+                    </div>
+
+                    <!-- Response Display Card -->
+                    <div id="responseCard" class="response-card clean-card hidden">
+                        <!-- Response Header -->
+                        <div class="card-header">
+                            <div>
+                                <h2 id="responseQueryTitle" class="query-title">Query Title</h2>
+                                <div class="badges-row">
+                                    <span id="chartTypeBadge" class="badge badge-neutral">Line Chart</span>
+                                    <span id="toolCalledBadge" class="badge badge-neutral">tool: get_order_trends</span>
+                                    <span id="agentModeBadge" class="badge badge-accent">mode: llm</span>
+                                </div>
+                            </div>
+                            <button id="pinBtn" class="pin-action-btn" onclick="handlePinCurrentChart()">
+                                Pin to Dashboard
+                            </button>
+                        </div>
+
+                        <!-- Assumptions Box -->
+                        <div id="assumptionsBox" class="assumptions-box hidden">
+                            <span id="assumptionsText">Assumptions: None</span>
+                        </div>
+
+                        <!-- 1-Sentence Insight Banner -->
+                        <div id="insightBanner" class="insight-banner">
+                            <div class="insight-content">
+                                <span class="insight-title">KEY INSIGHT</span>
+                                <p id="insightText">Analytical insight summary goes here.</p>
+                            </div>
+                        </div>
+
+                        <!-- Chart Type Justification Callout -->
+                        <div class="justification-box">
+                            <span class="justification-title">CHART RECOMMENDATION RATIONALE</span>
+                            <p id="justificationText">Justification statement.</p>
+                        </div>
+
+                        <!-- Chart Canvas Wrapper -->
+                        <div class="chart-wrapper">
+                            <canvas id="activeChartCanvas"></canvas>
+                        </div>
+
+                        <!-- Guardrail / Error Box -->
+                        <div id="errorBox" class="error-box hidden">
+                            <p id="errorText">Error message here.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: Pinnable Dashboard -->
+            <section id="dashboardSection" class="tab-section">
+                <div class="dashboard-header">
+                    <h2>Pinned Dashboard</h2>
+                    <p>Pinned charts persist across sessions. Click Refresh to re-run queries and inspect metric changes.</p>
+                </div>
+
+                <div id="dashboardGrid" class="dashboard-grid">
+                    <!-- Dynamic Pinned Cards Rendered Here -->
+                    <div id="emptyDashboardState" class="empty-state">
+                        <h3>No Pinned Charts</h3>
+                        <p>Run a query in the Query Builder and click "Pin to Dashboard" to save charts here.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
