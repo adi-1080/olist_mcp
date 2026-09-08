@@ -25,6 +25,15 @@ async def test_fallback_agent_sample_queries():
     res3 = await agent.process_query("What is the current stock price of Tesla?")
     assert res3.is_out_of_bounds is True
     assert res3.chart_type == "none"
+    assert res3.raw_data == []
+    assert res3.tool_called == "none"
+
+    # Off-domain questions must not fall through to a default product chart
+    res4 = await agent.process_query("iran war latest news")
+    assert res4.is_out_of_bounds is True
+    assert res4.chart_type == "none"
+    assert res4.raw_data == []
+    assert res4.tool_called == "none"
 
 @pytest.mark.asyncio
 async def test_agent_factory():

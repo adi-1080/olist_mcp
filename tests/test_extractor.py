@@ -20,4 +20,9 @@ def test_extract_state_and_limit():
 
 def test_check_out_of_bounds():
     assert check_out_of_bounds("What is the current stock price of Apple?") is True
+    assert check_out_of_bounds("iran war latest news") is True
+    assert check_out_of_bounds("customer demographics for São Paulo") is True
+    assert check_out_of_bounds("hello") is True
     assert check_out_of_bounds("Show monthly revenue trend for 2017") is False
+    assert check_out_of_bounds("What share of payments are credit card vs boleto?") is False
+    assert check_out_of_bounds("Top 10 sellers by revenue in São Paulo") is False

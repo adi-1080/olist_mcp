@@ -20,7 +20,8 @@ SAMPLE_QUERIES = [
     "Do sellers with faster delivery get better reviews?",
     "Show delivery delay and review score side by side by state",
     # Guardrail cases
-    "What is the current stock price of Apple?"
+    "What is the current stock price of Apple?",
+    "iran war latest news",
 ]
 
 async def main():

@@ -8,7 +8,7 @@ import json
 import asyncio
 import logging
 from typing import Dict, Any, Optional
-from src.agent.base import ILLMAgent, AgentResponse
+from src.agent.base import ILLMAgent, AgentResponse, out_of_bounds_response
 from src.agent.fallback_agent import RuleBasedFallbackAgent
 from src.agent.extractor import extract_parameters, check_out_of_bounds
 from src.agent.chart_selector import recommend_chart_and_build_config
@@ -229,9 +229,10 @@ class LLMBackedAgent(ILLMAgent):
         return None
 
     async def process_query(self, query: str) -> AgentResponse:
-        # 1. Guardrail Check
+        # 1. Guardrail Check — never dispatch tools for off-domain questions
         if check_out_of_bounds(query):
-            return await self.fallback_agent.process_query(query)
+            res = out_of_bounds_response(query, agent_mode="llm")
+            return res
 
         # 2. Attempt LLM tool choice with timeout
         llm_decision = await self._call_llm_with_timeout(query)
@@ -267,7 +268,7 @@ class LLMBackedAgent(ILLMAgent):
             elif tool_name == "get_multi_tool_analysis":
                 raw_res = tools.query_multi_tool_join(**merged_params)
             else:
-                raw_res = tools.query_product_performance()
+                return out_of_bounds_response(query, agent_mode="llm")
 
             res_data = raw_res.get("data", [])
         except Exception as e:

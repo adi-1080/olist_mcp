@@ -27,8 +27,31 @@ class AgentResponse(BaseModel):
     empty_result: bool = False
     error_message: Optional[str] = None
 
+def out_of_bounds_response(query: str, agent_mode: str) -> AgentResponse:
+    """Structured guardrail payload: no chart, clear analyst-facing message."""
+    return AgentResponse(
+        query=query,
+        agent_mode=agent_mode,
+        insight=(
+            "This question is outside the Brazilian E-Commerce dataset. "
+            "Ask about orders, revenue, products, sellers, reviews, payments, or delivery."
+        ),
+        assumptions=["Guardrail: query does not map to Olist analytics tables."],
+        chart_type="none",
+        justification="No chart is generated for topics the dataset does not contain.",
+        chart_config={"type": "none", "data": {}},
+        raw_data=[],
+        tool_called="none",
+        is_out_of_bounds=True,
+        error_message=(
+            "The Olist dataset only covers 2016–2018 Brazilian e-commerce orders. "
+            "It does not contain news, geopolitics, stock prices, weather, or demographics."
+        ),
+    )
+
+
 class ILLMAgent(ABC):
     @abstractmethod
     async def process_query(self, query: str) -> AgentResponse:
         """Processes user natural language query and returns structured AgentResponse."""
-        pass
+        raise NotImplementedError

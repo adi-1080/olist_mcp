@@ -6,7 +6,7 @@ Activated when AGENT_MODE=fallback or when LLM service is unavailable/times out.
 
 import logging
 from typing import Dict, Any, List
-from src.agent.base import ILLMAgent, AgentResponse
+from src.agent.base import ILLMAgent, AgentResponse, out_of_bounds_response
 from src.agent.extractor import extract_parameters, check_out_of_bounds
 from src.agent.chart_selector import recommend_chart_and_build_config
 from src.mcp_server import tools
@@ -23,19 +23,7 @@ class RuleBasedFallbackAgent(ILLMAgent):
 
         # 1. Guardrail Check: Out-of-bounds topic
         if check_out_of_bounds(query):
-            return AgentResponse(
-                query=query,
-                agent_mode="fallback",
-                insight="This query requests information outside the domain of the Brazilian E-Commerce dataset.",
-                assumptions=["Detected out-of-bounds query domain."],
-                chart_type="none",
-                justification="No chart can be generated for topics outside the dataset scope (e.g. stock prices, weather, external demographics).",
-                chart_config={"type": "none", "data": {}},
-                raw_data=[],
-                tool_called="none",
-                is_out_of_bounds=True,
-                error_message="Dataset does not contain stock prices, weather, or external demographic data."
-            )
+            return out_of_bounds_response(query, agent_mode="fallback")
 
         # 2. Extract Parameters & Assumptions
         params, assumptions = extract_parameters(query)
@@ -125,10 +113,7 @@ class RuleBasedFallbackAgent(ILLMAgent):
                 res_data = raw_res.get("data", [])
 
             else:
-                # Default fallback tool
-                tool_called = "get_product_performance"
-                raw_res = tools.query_product_performance(limit=10, sort_by="revenue")
-                res_data = raw_res.get("data", [])
+                return out_of_bounds_response(query, agent_mode="fallback")
 
         except Exception as e:
             logger.error(f"Fallback agent execution error: {e}")
